@@ -7782,7 +7782,7 @@
 	(footprint "Inductor_SMD:L_Changjiang_FNR4030S"
 		(layer "B.Cu")
 		(uuid "b3309f8c-fbba-4545-949f-940090bf3f48")
-		(at 173 55.3 90)
+		(at 173 55.5 90)
 		(descr "Inductor, Changjiang, FNR4030S, 4.0x4.0x3.0mm, (https://datasheet.lcsc.com/lcsc/1806131217_cjiang-Changjiang-Microelectronics-Tech-FNR5040S3R3NT_C167960.pdf), generated with kicad-footprint-generator gen_inductor.py")
 		(tags "wirewound power shielded")
 		(property "Reference" "L1"
