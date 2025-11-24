@@ -1966,7 +1966,7 @@
 			(uuid "e08429a4-436e-40fb-948e-d2ee9d262b7a")
 		)
 		(embedded_fonts no)
-		(model "${KICAD9_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/VQFN-20-1EP_3x3mm_P0.4mm_EP1.7x1.7mm.step"
+		(model "${KICAD9_3DMODEL_DIR}/Package_DFN_QFN.3dshapes/QFN-16-1EP_3x3mm_P0.5mm_EP1.7x1.7mm.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -5242,6 +5242,17 @@
 			(uuid "70327d7c-28c3-4cef-8e03-57382c005d86")
 		)
 		(embedded_fonts no)
+		(model "C:/Users/Tyler/Documents/KiCad/footprints/DFN-10_DD_LIT.step"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "Capacitor_SMD:C_0402_1005Metric"
 		(layer "F.Cu")
@@ -6355,6 +6366,17 @@
 			(uuid "5322af60-7c6d-494e-8394-6f1c23f8b31f")
 		)
 		(embedded_fonts no)
+		(model "C:/Users/Tyler/Documents/KiCad/footprints/PTS815SJM250SMTRLFS.stp"
+			(offset
+				(xyz 0 0 0)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz 0 0 0)
+			)
+		)
 	)
 	(footprint "Resistor_SMD:R_0402_1005Metric"
 		(layer "F.Cu")
@@ -7455,7 +7477,7 @@
 			(uuid "e120fb4a-fc3a-4608-ae4c-d360eb42cb78")
 		)
 		(embedded_fonts no)
-		(model "${KICAD9_3DMODEL_DIR}/Connector_USB.3dshapes/USB_C_Receptacle_G-Switch_GT-USB-7010ASV.step"
+		(model "${KICAD9_3DMODEL_DIR}/Connector_USB.3dshapes/USB_C_Receptacle_GCT_USB4105-xx-A_16P_TopMnt_Horizontal.step"
 			(offset
 				(xyz 0 0 0)
 			)
@@ -8141,18 +8163,6 @@
 			)
 			(layer "B.CrtYd")
 			(uuid "7c4ebe11-4c3c-405c-91fe-a082bb810e92")
-		)
-		(fp_text user "${REFERENCE}"
-			(at 0 4.6 90)
-			(layer "B.Fab")
-			(uuid "df63a8d8-615f-43af-a72e-63f6f825467d")
-			(effects
-				(font
-					(size 1 1)
-					(thickness 0.15)
-				)
-				(justify mirror)
-			)
 		)
 		(pad "1" smd rect
 			(at 0.1 0.1 270)
