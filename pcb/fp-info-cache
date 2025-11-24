@@ -1,4 +1,4 @@
-26404302503305921
+26413122218587075
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -104888,6 +104888,27 @@ capacitor electrolytic
 2
 2
 footprints
+DFN-10_DD_LIT
+
+LT1618EDD-PBF 
+0
+11
+11
+footprints
+DFN-10_DD_LIT-L
+
+LT1618EDD-PBF 
+0
+11
+11
+footprints
+DFN-10_DD_LIT-M
+
+LT1618EDD-PBF 
+0
+11
+11
+footprints
 DFN300X300X80-11N
 
 
@@ -105049,6 +105070,13 @@ SOT65P210X110-5N_Custom
 5
 5
 footprints
+SW4_PTS815 SJM 250 SMTR LFS_CNK
+
+PTS815 SJM 250 SMTR LFS 
+0
+4
+2
+footprints
 TRANS_BSC014N04LSIATMA1
 
 
@@ -105085,6 +105113,13 @@ test point SMD pad rectangle square
 1
 footprints
 TestPoint_Pad_6.0x4.0mm
+SMD rectangular pad as test Point, square 4.0mm side length
+test point SMD pad rectangle square
+0
+1
+1
+footprints
+TestPoint_Pad_6.0x12.0mm
 SMD rectangular pad as test Point, square 4.0mm side length
 test point SMD pad rectangle square
 0

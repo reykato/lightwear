@@ -1015,12 +1015,12 @@
 		(uuid "4640df7a-5dc1-4f6c-a11b-6ba7185f6c88")
 	)
 	(no_connect
-		(at 148.59 86.36)
-		(uuid "411a5274-452c-4b08-a80b-e98a4b7b546c")
+		(at 148.59 96.52)
+		(uuid "3408c52d-793d-4e0f-9c42-b58201e5ec91")
 	)
 	(no_connect
-		(at 148.59 83.82)
-		(uuid "54b0ccc8-ef2a-4168-916d-6f60bbd36f0c")
+		(at 148.59 86.36)
+		(uuid "411a5274-452c-4b08-a80b-e98a4b7b546c")
 	)
 	(no_connect
 		(at 148.59 81.28)
@@ -1233,9 +1233,9 @@
 		)
 		(uuid "d0661833-8962-4ef2-8427-8b02ba65f16b")
 	)
-	(hierarchical_label "EN_LED"
+	(hierarchical_label "DRV_nSHDN"
 		(shape output)
-		(at 148.59 96.52 0)
+		(at 148.59 83.82 0)
 		(effects
 			(font
 				(size 1.27 1.27)
