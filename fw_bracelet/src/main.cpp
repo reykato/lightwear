@@ -9,9 +9,9 @@
 
 // Gate voltages (volts) - must be <= 1.5V internal reference
 // Adjust these values to the required GATE_V_{mode-name}
-#define GATE_V_LOW  1.20f
-#define GATE_V_MED  1.35f
-#define GATE_V_HIGH 1.5f
+#define GATE_V_LOW  1.35f
+#define GATE_V_MED  1.5f
+#define GATE_V_HIGH 1.7f
 
 // DAC resolution used by the ATtiny1616 DAC (8-bit)
 #define DAC_MAX 255u
@@ -57,7 +57,7 @@ void configureDAC() {
     PORTA.DIRSET = PIN6_bm;
 
     // Set VREF = VDD (raw bits 0x3)
-    VREF.CTRLA = (VREF.CTRLA & ~0x07) | 0x04; // set VREF to 1.5v
+    VREF.CTRLA = (VREF.CTRLA & ~0x07) | 0x02; // set VREF to 1.5v
 
     // 2. Enable DAC0, enable output pin
     DAC0.CTRLA = DAC_ENABLE_bm | DAC_OUTEN_bm;
@@ -66,11 +66,11 @@ void configureDAC() {
     DAC0.DATA = 0;
 }
 
-// Convert desired voltage (0..1.5V) to DAC code
+// Convert desired voltage (0..2.5V) to DAC code
 uint8_t voltageToDac(float v) {
   if (v <= 0.0f) return 0;
-  if (v >= 1.5f) return (uint8_t)DAC_MAX;
-  return (uint8_t)((v / 1.5f) * (float)DAC_MAX + 0.5f);
+  if (v >= 2.5f) return (uint8_t)DAC_MAX;
+  return (uint8_t)((v / 2.5f) * (float)DAC_MAX + 0.5f);
 }
 
 void dacSetVoltage(float voltage) {
@@ -99,7 +99,7 @@ void applyMode(Mode m) {
 void setup() {
   configurePins();
   configureDAC();
-  applyMode(MODE_OFF);
+  applyMode(mode);
 }
 
 void loop() {
