@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <avr/io.h>
+#include <avr/sleep.h>
 
 // Pin port bits (ATtiny1616 port naming)
 #define PIN_nCHRG PIN_PC2
@@ -60,7 +61,7 @@ void configureDAC() {
     VREF.CTRLA = (VREF.CTRLA & ~0x07) | 0x02; // set VREF to 1.5v
 
     // 2. Enable DAC0, enable output pin
-    DAC0.CTRLA = DAC_ENABLE_bm | DAC_OUTEN_bm;
+    DAC0.CTRLA = DAC_ENABLE_bm | DAC_OUTEN_bm | DAC_RUNSTDBY_bm;
 
     // 3. Start with 0V
     DAC0.DATA = 0;
@@ -96,18 +97,39 @@ void applyMode(Mode m) {
   }
 }
 
+void wakeISR() {
+  delay(30);
+  if (!digitalRead(PIN_BTN)) {
+    mode = (Mode)((mode + 1) % 4);
+    applyMode(mode);
+    while (!digitalRead(PIN_BTN)) {
+      delay(10);
+    }
+  }
+}
+
+void startSleep() {
+  set_sleep_mode(SLEEP_MODE_STANDBY);
+  sleep_enable();
+  sleep_cpu();   // CPU sleeps here
+
+  // Execution resumes here after wake-up
+  sleep_disable();
+}
+
 void setup() {
   configurePins();
+  attachInterrupt(
+    digitalPinToInterrupt(PIN_BTN),
+    wakeISR,
+    LOW
+  );
   configureDAC();
   applyMode(mode);
+  // startSleep();
 }
 
 void loop() {
-  // button press cycles modes
-  if (readButtonPressed()) {
-    mode = (Mode)((mode + 1) % 4);
-    applyMode(mode);
-  }
-
-  delay(20);
+  startSleep();
+  delay(30);
 }
