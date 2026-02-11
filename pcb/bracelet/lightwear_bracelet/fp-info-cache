@@ -1,4 +1,4 @@
-26427252649153690
+26436104676896547
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -105000,6 +105000,13 @@ DRV8320RSRHAR
 41
 41
 footprints
+SMT_231GPLFS
+
+KMS231GPLFS 
+0
+7
+4
+footprints
 SOD-123FL
 
 
@@ -105034,6 +105041,13 @@ TPS7B92050DBVR
 0
 5
 5
+footprints
+SOT-23-MOSFET
+SOT, 3 Pin (JEDEC TO-236 Var AB https://www.jedec.org/document_search?search_api_views_fulltext=TO-236), generated with kicad-footprint-generator ipc_gullwing_generator.py
+SOT TO_SOT_SMD
+0
+3
+3
 footprints
 SOT-223_3MC_MCH
 
@@ -105112,6 +105126,20 @@ TRANS_BSC014N04LSIATMA1_Custom_NoSilkscreen
 3
 3
 footprints
+TestPoint_Pad_2.0x1.2mm_slim
+SMD rectangular pad as test Point, square 2.0mm side length
+test point SMD pad rectangle square
+0
+1
+1
+footprints
+TestPoint_Pad_2.0x1.5mm_slim
+SMD rectangular pad as test Point, square 2.0mm side length
+test point SMD pad rectangle square
+0
+1
+1
+footprints
 TestPoint_Pad_2.0x2.0mm_slim
 SMD rectangular pad as test Point, square 2.0mm side length
 test point SMD pad rectangle square
@@ -105121,6 +105149,13 @@ test point SMD pad rectangle square
 footprints
 TestPoint_Pad_4.0x1.4mm
 SMD rectangular pad as test Point, square 4.0mm side length
+test point SMD pad rectangle square
+0
+1
+1
+footprints
+TestPoint_Pad_5.0x2mm_slim
+SMD rectangular pad as test Point, square 2.0mm side length
 test point SMD pad rectangle square
 0
 1
