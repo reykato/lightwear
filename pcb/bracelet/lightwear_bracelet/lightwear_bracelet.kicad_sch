@@ -112,6 +112,137 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Connector:TestPoint_2Pole"
+			(pin_names
+				(offset 0.762)
+				(hide yes)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "TP"
+				(at 0 1.524 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "TestPoint_2Pole"
+				(at 0 -1.778 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "~"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "2-polar test point"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "point tp"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "Pin* Test*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "TestPoint_2Pole_0_1"
+				(circle
+					(center -1.778 0)
+					(radius 0.762)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(circle
+					(center 1.778 0)
+					(radius 0.762)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(pin passive line
+					(at -5.08 0 0)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 5.08 0 180)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "Device:C"
 			(pin_numbers
 				(hide yes)
@@ -2164,6 +2295,16 @@
 	)
 	(wire
 		(pts
+			(xy 30.48 63.5) (xy 30.48 71.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "27389da5-b5bd-4fab-9fe6-590521c8e30f")
+	)
+	(wire
+		(pts
 			(xy 190.5 87.63) (xy 190.5 83.82)
 		)
 		(stroke
@@ -2201,6 +2342,16 @@
 			(type default)
 		)
 		(uuid "3523031f-5b58-4cc5-8d72-1d2e44dd7555")
+	)
+	(wire
+		(pts
+			(xy 44.45 71.12) (xy 48.26 71.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "380ed391-a3d4-4b34-b286-5eecdebd906e")
 	)
 	(wire
 		(pts
@@ -2264,16 +2415,6 @@
 	)
 	(wire
 		(pts
-			(xy 49.53 74.93) (xy 49.53 77.47)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "65ad2e7c-069d-4419-b1f3-b4b59d62186b")
-	)
-	(wire
-		(pts
 			(xy 182.88 99.06) (xy 190.5 99.06)
 		)
 		(stroke
@@ -2321,16 +2462,6 @@
 			(type default)
 		)
 		(uuid "8827a4c1-7dea-4b36-9a22-ff5fd1891d3c")
-	)
-	(wire
-		(pts
-			(xy 34.29 66.04) (xy 34.29 68.58)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "8bcee478-dc7c-4b39-a720-361a0c43fcbf")
 	)
 	(wire
 		(pts
@@ -2444,6 +2575,16 @@
 	)
 	(wire
 		(pts
+			(xy 34.29 71.12) (xy 30.48 71.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f60095e8-1f20-4af0-abf1-5532f13c330f")
+	)
+	(wire
+		(pts
 			(xy 240.03 132.08) (xy 243.84 132.08)
 		)
 		(stroke
@@ -2461,6 +2602,16 @@
 			(type default)
 		)
 		(uuid "fe38f4c9-e773-4506-921a-6b6119c74ab1")
+	)
+	(wire
+		(pts
+			(xy 48.26 71.12) (xy 48.26 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "fe9fd02f-187d-4f2b-8765-f26ded085e94")
 	)
 	(wire
 		(pts
@@ -2600,7 +2751,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 49.53 77.47 0)
+		(at 48.26 76.2 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -2609,7 +2760,7 @@
 		(fields_autoplaced yes)
 		(uuid "08c9b551-fb3f-4c80-b54a-7c34c848fb93")
 		(property "Reference" "#PWR04"
-			(at 49.53 83.82 0)
+			(at 48.26 82.55 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2618,7 +2769,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 49.53 82.55 0)
+			(at 48.26 81.28 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2626,7 +2777,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 49.53 77.47 0)
+			(at 48.26 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2635,7 +2786,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 49.53 77.47 0)
+			(at 48.26 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2644,7 +2795,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 49.53 77.47 0)
+			(at 48.26 76.2 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2659,6 +2810,74 @@
 			(project "lightwear_bracelet"
 				(path "/a0570445-ed22-48e6-80a6-1819b94aba45"
 					(reference "#PWR04")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Connector:TestPoint_2Pole")
+		(at 39.37 71.12 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "0b90c5dc-fef3-4986-839c-92faf1597b1b")
+		(property "Reference" "TP6"
+			(at 39.37 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "TestPoint_2Pole"
+			(at 39.37 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "footprints:BatteryBMSBoardPads"
+			(at 39.37 71.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 39.37 71.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "2-polar test point"
+			(at 39.37 71.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "c74b89f1-048d-4b3c-96ae-7e0262b9de78")
+		)
+		(pin "2"
+			(uuid "6b1363c6-526b-4060-bf96-689fb1ec46c2")
+		)
+		(instances
+			(project ""
+				(path "/a0570445-ed22-48e6-80a6-1819b94aba45"
+					(reference "TP6")
 					(unit 1)
 				)
 			)
@@ -2912,73 +3131,6 @@
 	)
 	(symbol
 		(lib_id "Connector:TestPoint")
-		(at 49.53 74.93 0)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "38112986-0ee1-4bf9-84fa-823e55dda4dd")
-		(property "Reference" "TP7"
-			(at 52.07 70.3579 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "-BATT"
-			(at 52.07 72.8979 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "footprints:TestPoint_Pad_2.0x1.2mm_slim"
-			(at 54.61 74.93 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 54.61 74.93 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "test point"
-			(at 49.53 74.93 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "ae9a70f9-d121-449f-9018-7564d621eb23")
-		)
-		(instances
-			(project "lightwear_bracelet"
-				(path "/a0570445-ed22-48e6-80a6-1819b94aba45"
-					(reference "TP7")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector:TestPoint")
 		(at 41.91 34.29 0)
 		(mirror x)
 		(unit 1)
@@ -3105,73 +3257,6 @@
 			(project "lightwear_bracelet"
 				(path "/a0570445-ed22-48e6-80a6-1819b94aba45"
 					(reference "#PWR014")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector:TestPoint")
-		(at 34.29 68.58 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "429860b9-f31b-4782-ac35-5ec718101c88")
-		(property "Reference" "TP6"
-			(at 36.83 70.6119 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "+BATT"
-			(at 36.83 73.1519 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "footprints:TestPoint_Pad_2.0x1.2mm_slim"
-			(at 29.21 68.58 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 29.21 68.58 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "test point"
-			(at 34.29 68.58 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "2427f611-ca20-4d0c-b2ff-9e509f814f18")
-		)
-		(instances
-			(project "lightwear_bracelet"
-				(path "/a0570445-ed22-48e6-80a6-1819b94aba45"
-					(reference "TP6")
 					(unit 1)
 				)
 			)
@@ -3659,7 +3744,7 @@
 	)
 	(symbol
 		(lib_id "power:+BATT")
-		(at 34.29 66.04 0)
+		(at 30.48 63.5 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -3668,7 +3753,7 @@
 		(fields_autoplaced yes)
 		(uuid "92588b7f-1b6c-461e-8b7c-b677f85e870c")
 		(property "Reference" "#PWR03"
-			(at 34.29 69.85 0)
+			(at 30.48 67.31 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3677,7 +3762,7 @@
 			)
 		)
 		(property "Value" "+BATT"
-			(at 34.29 60.96 0)
+			(at 30.48 58.42 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3685,7 +3770,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 34.29 66.04 0)
+			(at 30.48 63.5 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3694,7 +3779,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 34.29 66.04 0)
+			(at 30.48 63.5 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -3703,7 +3788,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+BATT\""
-			(at 34.29 66.04 0)
+			(at 30.48 63.5 0)
 			(effects
 				(font
 					(size 1.27 1.27)
