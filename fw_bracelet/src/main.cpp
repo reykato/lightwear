@@ -12,7 +12,7 @@
 // Adjust these values to the required GATE_V_{mode-name}
 #define GATE_V_LOW  1.35f
 #define GATE_V_MED  1.55f
-#define GATE_V_HIGH 1.8f
+#define GATE_V_HIGH 1.7f
 
 // DAC resolution used by the ATtiny1616 DAC (8-bit)
 #define DAC_MAX 255u
