@@ -33,13 +33,15 @@ void configurePins() {
   pinMode(PIN_LED, OUTPUT);
 }
 
+void configureVREF() {
+  // Set VREF to 1.1v for ADC, 2.5v for DAC
+  VREF.CTRLA = VREF_ADC0REFSEL_1V1_gc | VREF_DAC0REFSEL_2V5_gc;
+}
+
 // Setup DAC if available
 void configureDAC() {
     // Configure PA6 as output
     PORTA.DIRSET = PIN6_bm;
-
-    // Set VREF to 2.5v (raw bit mask 0x02)
-    VREF.CTRLA = (VREF.CTRLA & ~0x07) | 0x02;
 
     // Enable DAC0, enable output pin
     DAC0.CTRLA = DAC_ENABLE_bm | DAC_OUTEN_bm | DAC_RUNSTDBY_bm;
@@ -48,58 +50,28 @@ void configureDAC() {
     DAC0.DATA = 0;
 }
 
-// --- VDD measurement via ADC (internal bandgap) -------------------------
-// Note: The exact ADC mux/bitfield symbols depend on the device header.
-// Adjust `ADC_MUXPOS_BANDGAP_gc` / `ADC_REFSEL_VDD_gc` if your toolchain
-// uses slightly different names. The bandgap nominal is typically ~1.1V;
-// use the datasheet or factory calibration for best accuracy.
-
 static inline void configureADCForVddMeasurement(void) {
-  // Enable ADC, keep other bits default
-  ADC0.CTRLA = ADC_ENABLE_bm;
+  // Configure ADC for measuring the internal bandgap (VDD as VREF).
+  // Setup order: configure resolution and control fields first, then enable.
 
-  // Use available reference and resolution macros
-  #if defined(ADC_REFSEL_VDD_gc)
-    #define _ADC_REF_VDD ADC_REFSEL_VDD_gc
-  #elif defined(ADC_REFSEL_VDDREF_gc)
-    #define _ADC_REF_VDD ADC_REFSEL_VDDREF_gc
-  #else
-    #define _ADC_REF_VDD 0
-  #endif
+  ADC0.CTRLA = ADC_RESSEL_10BIT_gc; // Set ADC resolution to 10-bit
+  ADC0.CTRLB = ADC_SAMPNUM_ACC32_gc; // Accumulate 32 samples for each measurement
+  ADC0.CTRLC = ADC_SAMPCAP_bm | ADC_REFSEL_VDDREF_gc | ADC_PRESC_DIV32_gc;
+  ADC0.CTRLD = ADC_INITDLY_DLY32_gc; // Initialization delay of 32 CLK_ADC cycles
+  ADC0.SAMPCTRL = 20; // Extended sample length for internal bandgap (in CLK_ADC cycles)
 
-  #if defined(ADC_RESSEL_12BIT_gc)
-    #define _ADC_RES_12 ADC_RESSEL_12BIT_gc
-  #elif defined(ADC_RESSEL_10BIT_gc)
-    #define _ADC_RES_12 ADC_RESSEL_10BIT_gc
-  #else
-    #define _ADC_RES_12 0
-  #endif
-
-    ADC0.CTRLC = _ADC_REF_VDD | _ADC_RES_12;
-
-    // Choose a moderate prescaler so ADC clock is within spec
-  #if defined(ADC_PRESC_DIV64_gc)
-    ADC0.CTRLB = ADC_PRESC_DIV64_gc;
-  #elif defined(ADC_PRESC_DIV32_gc)
-    ADC0.CTRLB = ADC_PRESC_DIV32_gc;
-  #endif
-
-  // Small sample time; increase if you see unstable readings
-  ADC0.SAMPCTRL = 8;
-
-  // Do not set MUXPOS here permanently; the read function will select bandgap
+  // Finally, enable ADC
+  ADC0.CTRLA |= ADC_ENABLE_bm;
 }
 
 static inline uint16_t readBandgapADC(void) {
-  // Select internal bandgap as positive input
-  #ifdef ADC_MUXPOS_BANDGAP_gc
-    ADC0.MUXPOS = ADC_MUXPOS_BANDGAP_gc;
-  #elif defined(ADC_MUXPOS_INTREF_gc)
-    ADC0.MUXPOS = ADC_MUXPOS_INTREF_gc;
-  #else
-    // Fallback: try value 0x1E which is commonly the internal reference selector
-    ADC0.MUXPOS = 0x1E;
-  #endif
+  ADC0.MUXPOS = ADC_MUXPOS_INTREF_gc;
+
+  // Clear any pending result-ready flag, allow MUX/sample cap to settle
+  ADC0.INTFLAGS = ADC_RESRDY_bm;
+
+  // Allow the input MUX and sample cap to settle
+  delayMicroseconds(10);
 
   // Start single conversion
   ADC0.COMMAND = ADC_STCONV_bm;
@@ -107,11 +79,13 @@ static inline uint16_t readBandgapADC(void) {
   // Wait for conversion complete
   while (!(ADC0.INTFLAGS & ADC_RESRDY_bm)) {}
 
-  // Clear ready flag
+  // Read result first (reading can clear ready flag on some implementations)
+  uint16_t res = ADC0.RES;
+
+  // Ensure flag cleared
   ADC0.INTFLAGS = ADC_RESRDY_bm;
 
-  // Return result
-  return ADC0.RES;
+  return res;
 }
 
 float measureVdd(void) {
@@ -121,25 +95,23 @@ float measureVdd(void) {
   // Configure ADC peripheral
   configureADCForVddMeasurement();
 
-  // Take several samples and average
-  const int samples = 8;
-  uint32_t sum = 0;
-  for (int i = 0; i < samples; ++i) {
-    sum += readBandgapADC();
-    delay(2);
-  }
-  uint32_t avg = sum / samples;
+  // Single conversion returns accumulated sum when ACC32 is used.
+  // Divide by accumulation count to get average per-sample reading.
+  const float ACCUM_COUNT = 32.0f;
 
-  // ADC resolution: 12-bit -> max = 4095
-  const float ADC_MAX = 4095.0f;
-  if (avg == 0) return 0.0f;
+  uint16_t res_sum = readBandgapADC();
+  float avg_reading = (float)res_sum / ACCUM_COUNT;
 
-  // VDD = Vbg * ADC_MAX / reading
-  float vdd = VBG * (ADC_MAX / (float)avg);
+  // ADC resolution: 10-bit -> max = 1023
+  const float ADC_MAX = 1023.0f;
+  if (avg_reading <= 0.0f) return 0.0f;
+
+  // VDD = Vbg * ADC_MAX / average_reading
+  float vdd = VBG * (ADC_MAX / avg_reading);
   return vdd;
 }
 
-// Convert desired voltage (0..2.5V) to DAC code
+// Convert desired voltage as float (0..2.5V) to 8-bit number
 uint8_t voltageToDac(float v) {
   if (v <= 0.0f) return 0;
   if (v >= 2.5f) return (uint8_t)DAC_MAX;
@@ -179,20 +151,21 @@ void blinkOnboardLED(int times, unsigned int delayMillis) {
 }
 
 void blinkStrip(Mode mode, int times, unsigned int delayMillis) {
-  Mode beforeMode = globalMode;
   for (int i = 0; i < times; i++) {
-    applyMode(MODE_OFF);
-    delay(delayMillis);
     applyMode(mode);
     delay(delayMillis);
+    applyMode(MODE_OFF);
+    delay(delayMillis);
   }
-  applyMode(beforeMode);
 }
 
 void showBatteryLevel() {
+  Mode beforeMode = globalMode;
+  applyMode(MODE_OFF);
+  delay(500);
   float batteryV = measureVdd();
   if (batteryV <= 3.75) { // 0% - 25%
-    blinkStrip(MODE_LOW, 1, 500);
+    blinkStrip(MODE_LOW, 1, 400);
   } else if (batteryV <= 3.85) { // 25% - 50%
     blinkStrip(MODE_LOW, 2, 300);
   } else if (batteryV <= 3.95) { // 50% - 75%
@@ -200,23 +173,20 @@ void showBatteryLevel() {
   } else { // 75% - 100%
     blinkStrip(MODE_HIGH, 4, 200);
   }
+  delay(500);
+  applyMode(beforeMode);
 }
 
 void startSleep() {
   set_sleep_mode(SLEEP_MODE_STANDBY);
   sleep_enable();
-  sleep_cpu();   // CPU sleeps here
-
-  // Execution resumes here after wake-up
+  sleep_cpu();
 }
 
-// ISR should be minimal: set a flag and return
 void wakeISR() {
   wakeRequested = true;
-  // sleep_disable();
 }
 
-// Handle the wake event in the main context (not in ISR)
 void handleWake() {
   // clear request early to avoid re-entrancy while handling
   wakeRequested = false;
@@ -225,14 +195,17 @@ void handleWake() {
   if (!digitalRead(PIN_BTN)) {
     unsigned long startTime = millis();
     unsigned long endTime = startTime;
-    while (!digitalRead(PIN_BTN)) {
+
+    while (!digitalRead(PIN_BTN)) { // while button is held down
       endTime = millis();
       delay(1);
-      if (endTime - startTime >= longPressMillis) {
+      if (endTime - startTime >= longPressMillis) { // long press identified
         showBatteryLevel();
         return;
       }
     }
+
+    // short press
     globalMode = (Mode)((globalMode + 1) % 4);
     applyMode(globalMode);
   }
@@ -240,23 +213,12 @@ void handleWake() {
 
 void setup() {
   configurePins();
-
-  // Blink when code resets
-  for (int i = 0; i < 2; i++) {
-    digitalWrite(PIN_LED, LOW);
-    delay(100);
-    digitalWrite(PIN_LED, HIGH);
-    delay(100);
-  }
-
-  attachInterrupt(
-    digitalPinToInterrupt(PIN_BTN),
-    wakeISR,
-    CHANGE
-  );
+  attachInterrupt(digitalPinToInterrupt(PIN_BTN), wakeISR, CHANGE);
+  configureVREF();
   configureDAC();
-  applyMode(globalMode);
+  blinkOnboardLED(2, 200);
 
+  applyMode(globalMode);
 }
 
 void loop() {

@@ -1,0 +1,2 @@
+3h20m at 1.8v gate voltage
+5h34m at 1.7v gate voltage
