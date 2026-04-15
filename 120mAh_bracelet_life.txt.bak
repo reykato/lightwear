@@ -45,4 +45,4 @@ retrying the battery life tests (trimmed like 1cm off the strip since last time)
 1.55v gate (indefinitely disabled all unused input buffers, including onboard LED and nCHRG input)
 	battery 4.150v at 00h00m
 	battery 3.121v at 12h34m
-	dead at 12h50m
+	dead at 

@@ -165,11 +165,11 @@ static void showBatteryLevel(void) {
   applyMode(MODE_OFF);
   delay(500);
   float batteryV = measureVdd();
-  if (batteryV <= 3.65) { // 0% - 25%
+  if (batteryV <= 3.55) { // 0% - 25%
     blinkStrip(MODE_MED, 1, 400);
-  } else if (batteryV <= 3.8) { // 25% - 50%
+  } else if (batteryV <= 3.7) { // 25% - 50%
     blinkStrip(MODE_MED, 2, 300);
-  } else if (batteryV <= 3.95) { // 50% - 75%
+  } else if (batteryV <= 3.9) { // 50% - 75%
     blinkStrip(MODE_MED, 3, 250);
   } else { // 75% - 100%
     blinkStrip(MODE_HIGH, 4, 200);
@@ -185,7 +185,7 @@ static void disableInputBuffers(void) {
   PORTA.PIN2CTRL = PORT_ISC_INPUT_DISABLE_gc; // unused
   PORTA.PIN3CTRL = PORT_ISC_INPUT_DISABLE_gc; // unused
   PORTA.PIN4CTRL = PORT_ISC_INPUT_DISABLE_gc; // unused
-  PORTA.PIN5CTRL = PORT_ISC_BOTHEDGES_gc;
+  PORTA.PIN5CTRL = PORT_ISC_BOTHEDGES_gc;     // PA5 = button, sense enabled for both edges
   PORTA.PIN6CTRL = PORT_ISC_INPUT_DISABLE_gc; // PA6 = GATE output, input buffer not needed
   PORTA.PIN7CTRL = PORT_ISC_INPUT_DISABLE_gc; // unused
 
@@ -206,26 +206,26 @@ static void restoreInputBuffers(void) {
   // Reset all PINnCTRL registers to power-on default (input buffer on,
   // no pull-up, no interrupt). configurePins() and attachInterrupt()
   // called in restorePeripherals() will then set the correct modes.
-  PORTA.PIN0CTRL = 0;
-  PORTA.PIN1CTRL = 0;
-  PORTA.PIN2CTRL = 0;
-  PORTA.PIN3CTRL = 0;
-  PORTA.PIN4CTRL = 0;
+  // PORTA.PIN0CTRL = 0;
+  // PORTA.PIN1CTRL = 0;
+  // PORTA.PIN2CTRL = 0;
+  // PORTA.PIN3CTRL = 0;
+  // PORTA.PIN4CTRL = 0;
   PORTA.PIN5CTRL = 0; // attachInterrupt() will reconfigure PA5
   PORTA.PIN6CTRL = 0;
-  PORTA.PIN7CTRL = 0;
+  // PORTA.PIN7CTRL = 0;
 
-  PORTB.PIN0CTRL = 0;
-  PORTB.PIN1CTRL = 0;
-  PORTB.PIN2CTRL = 0;
-  PORTB.PIN3CTRL = 0;
-  PORTB.PIN4CTRL = 0;
-  PORTB.PIN5CTRL = 0;
+  // PORTB.PIN0CTRL = 0;
+  // PORTB.PIN1CTRL = 0;
+  // PORTB.PIN2CTRL = 0;
+  // PORTB.PIN3CTRL = 0;
+  // PORTB.PIN4CTRL = 0;
+  // PORTB.PIN5CTRL = 0;
 
-  PORTC.PIN0CTRL = 0;
-  PORTC.PIN1CTRL = 0;
-  PORTC.PIN2CTRL = 0;
-  PORTC.PIN3CTRL = 0;
+  // PORTC.PIN0CTRL = 0;
+  // PORTC.PIN1CTRL = 0;
+  // PORTC.PIN2CTRL = 0;
+  // PORTC.PIN3CTRL = 0;
 }
 
 static void startSleep(void) {
@@ -246,8 +246,8 @@ static void shutdownPeripherals(void) {
   DAC0.CTRLA &= ~DAC_ENABLE_bm;
 
   // Turn off onboard LED (active low) and set pin high-impedance
-  digitalWrite(PIN_LED, HIGH);
-  pinMode(PIN_LED, INPUT);
+  // digitalWrite(PIN_LED, HIGH);
+  // pinMode(PIN_LED, INPUT);
 
   // Disable ADC to save power
   ADC0.CTRLA &= ~ADC_ENABLE_bm;
