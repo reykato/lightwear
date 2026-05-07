@@ -1,0 +1,48 @@
+3h20m at 1.8v gate voltage
+5h34m at 1.7v gate voltage
+
+testing standby power consumption
+	17:40 14 March 2026 - 3.89v
+	01:20 15 March 2026 - 3.87v
+	13:19 15 March 2026 - 3.85v
+	16:08 16 March 2026 - 3.82v
+
+again
+	19:24 16 March 2026 - 3.83v
+	(got new meter)
+	19:58 17 March 2026 - 3.53v
+
+again in SLEEP_MODE_PWR_DWN
+	21:35 18 March 2026 - 4.166v
+	23:35 18 March 2026 - 4.139v
+	09:41 19 March 2026 - 4.089v
+	wtf why is it still draining
+
+in SLEEP_MODE_PWR_DWN with peripherals shut down
+	17:11 22 March 2026 - 4.108v
+	20:07 22 March 2026 - 4.095v
+	11:13 23 March 2026 - 4.040v
+	15:48 23 March 2026 - 4.025v
+	figured out that there's ~120uA current draw at 3.7v (?)
+	it goes up to 350uA at 4.2v and down to 50uA at 3v
+	think i need hardware pulldown on mosfet gate so then all peripherals can be shut down
+
+okay this time we really shut down peripherals and disabled input buffers. showing 0.9uA on the fluke!!
+	21:35 30 March 2026 - 3.760v
+	00:41 31 March 2026 - 3.778v
+	10:33 31 March 2026 - 3.769v
+	fucking hell it's finally fixed
+
+retrying the battery life tests (trimmed like 1cm off the strip since last time)
+1.55v gate
+	battery 3.170v at 12h18m
+	dead after 13h10m (estimated, I didn't notice it shut off)
+1.70v gate
+	battery 3.862v at 00h57m
+	battery 3.670v at 02h02m
+	battery 3.480v at 03h50m
+	dead at 4h54m
+1.55v gate (indefinitely disabled all unused input buffers, including onboard LED and nCHRG input)
+	battery 4.150v at 00h00m
+	battery 3.121v at 12h34m
+	dead at 12h50m
