@@ -1,4 +1,4 @@
-26443210241481252
+26444987671758653
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -105139,6 +105139,13 @@ TRANS_BSC014N04LSIATMA1_Custom_NoSilkscreen
 0
 3
 3
+footprints
+TestPoint_Pad_1.5x0.8mm_slim
+SMD rectangular pad as test Point, square 2.0mm side length
+test point SMD pad rectangle square
+0
+1
+1
 footprints
 TestPoint_Pad_2.0x1.2mm_slim
 SMD rectangular pad as test Point, square 2.0mm side length

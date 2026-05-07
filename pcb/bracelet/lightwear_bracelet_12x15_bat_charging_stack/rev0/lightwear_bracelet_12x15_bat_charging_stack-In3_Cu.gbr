@@ -1,0 +1,26 @@
+%TF.GenerationSoftware,KiCad,Pcbnew,9.0.5*%
+%TF.CreationDate,2026-04-28T21:08:13-04:00*%
+%TF.ProjectId,lightwear_bracelet_12x15_bat_charging_stack,6c696768-7477-4656-9172-5f6272616365,rev?*%
+%TF.SameCoordinates,Original*%
+%TF.FileFunction,Copper,L4,Inr*%
+%TF.FilePolarity,Positive*%
+%FSLAX46Y46*%
+G04 Gerber Fmt 4.6, Leading zero omitted, Abs format (unit mm)*
+G04 Created by KiCad (PCBNEW 9.0.5) date 2026-04-28 21:08:13*
+%MOMM*%
+%LPD*%
+G01*
+G04 APERTURE LIST*
+%TA.AperFunction,ViaPad*%
+%ADD10C,0.600000*%
+%TD*%
+G04 APERTURE END LIST*
+D10*
+%TO.N,Net-(TP1-Pad1)*%
+X150000000Y-103000000D03*
+%TO.N,Net-(TP2-Pad1)*%
+X150000000Y-105500000D03*
+%TO.N,Net-(TP3-Pad1)*%
+X150000000Y-108000000D03*
+%TD*%
+M02*
