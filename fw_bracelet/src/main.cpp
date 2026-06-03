@@ -11,21 +11,19 @@ static void wakeISR(void);
 #define PIN_LED   PIN_PC1 // (LED cathode, active low)
 #define PIN_GATE  PIN_PA6 // (DAC output)
 
-// Gate voltages (volts) - must be <= 2.5V internal reference
+// Gate voltages - must be <= 2.5V internal reference
 // Adjust these values to the required GATE_V_{mode-name}
-#define GATE_V_LOW  1.35f
-#define GATE_V_MED  1.55f
-#define GATE_V_HIGH 1.7f
+#define GATE_V_LOW  1.00f
+#define GATE_V_HIGH 1.15f
 
 // DAC resolution used by the ATtiny1616 DAC (8-bit)
 #define DAC_MAX 255u
 
-enum Mode { MODE_OFF = 0, MODE_LOW, MODE_MED, MODE_HIGH };
+enum Mode { MODE_OFF = 0, MODE_LOW, MODE_HIGH };
 
 static const float modeVoltages[] = {
     0.0f,
     GATE_V_LOW,
-    GATE_V_MED,
     GATE_V_HIGH
 };
 
@@ -40,8 +38,8 @@ static constexpr long longPressMillis = 2000;
 static void configurePins(void) {
   pinMode(PIN_nCHRG, INPUT_PULLUP);
   pinMode(PIN_BTN, INPUT_PULLUP);
-  pinMode(PIN_LED, OUTPUT);
-  digitalWrite(PIN_LED, HIGH);
+  // pinMode(PIN_LED, OUTPUT);
+  // digitalWrite(PIN_LED, HIGH);
 }
 
 static void configureVREF(void) {
@@ -166,11 +164,11 @@ static void showBatteryLevel(void) {
   delay(500);
   float batteryV = measureVdd();
   if (batteryV <= 3.55) { // 0% - 25%
-    blinkStrip(MODE_MED, 1, 400);
+    blinkStrip(MODE_HIGH, 1, 400);
   } else if (batteryV <= 3.7) { // 25% - 50%
-    blinkStrip(MODE_MED, 2, 300);
+    blinkStrip(MODE_HIGH, 2, 300);
   } else if (batteryV <= 3.9) { // 50% - 75%
-    blinkStrip(MODE_MED, 3, 250);
+    blinkStrip(MODE_HIGH, 3, 250);
   } else { // 75% - 100%
     blinkStrip(MODE_HIGH, 4, 200);
   }
@@ -267,29 +265,20 @@ static void restorePeripherals(void) {
 }
 
 static void startDeepSleep(void) {
-  // Use the deepest available sleep mode for ATtiny1616
+  // Deepest sleep mode on ATtiny1616
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-
   noInterrupts();
 
-  // Turn off outputs and peripherals we'll reconfigure after wake
+  // Turn off outputs and peripherals which will be reconfigured after wake
   shutdownPeripherals();
-
-  // Disable all input buffers and configure PA5 wake interrupt.
-  // Must happen after shutdownPeripherals() (which calls pinMode/
-  // digitalWrite and would overwrite PINnCTRL registers) and inside
-  // the cli() guard so the ISC field is set before sei().
   disableInputBuffers();
 
   sleep_enable();
-
   interrupts();
   sleep_cpu();
 
   // Woke up here
   sleep_disable();
-
-  // Restore peripherals needed after wake
   restorePeripherals();
 }
 
@@ -298,7 +287,7 @@ static void wakeISR(void) {
 }
 
 static void handleWake(void) {
-  // clear request early to avoid re-entrancy while handling
+  // Clear request early to avoid re-entrancy while handling
   wakeRequested = false;
 
   delay(debounceDelayMillis);
@@ -306,17 +295,17 @@ static void handleWake(void) {
     unsigned long startTime = millis();
     unsigned long endTime = startTime;
 
-    while (!digitalRead(PIN_BTN)) { // while button is held down
+    while (!digitalRead(PIN_BTN)) { // While button is held down
       endTime = millis();
       delay(1);
-      if (endTime - startTime >= longPressMillis) { // long press identified
+      if (endTime - startTime >= longPressMillis) { // Long press identified
         showBatteryLevel();
         return;
       }
     }
 
-    // short press
-    applyMode((Mode)((globalMode + 1) % 4));
+    // Short press
+    applyMode((Mode)((globalMode + 1) % 3));
   }
 }
 
@@ -326,8 +315,8 @@ void setup() {
   configureVREF();
   configureDAC();
 
-  blinkOnboardLED(2, 200);
-  blinkStrip(MODE_HIGH, 2, 200);
+  // blinkOnboardLED(2, 200);
+  // blinkStrip(MODE_LOW, 2, 200);
   applyMode(globalMode);
 }
 

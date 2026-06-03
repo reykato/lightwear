@@ -49,7 +49,7 @@
       "conflict_shadows",
       "shapes"
     ],
-    "visible_layers": "00000000_00000000_00002a80_aaaaaaaf",
+    "visible_layers": "ffffffff_ffffffff_ffffffff_ffffffff",
     "zone_display_mode": 0
   },
   "git": {
@@ -58,7 +58,7 @@
     "ssh_key": ""
   },
   "meta": {
-    "filename": "lightwear_bracelet_12x15_bat.kicad_prl",
+    "filename": "lightwear_bracelet_btn_fpc.kicad_prl",
     "version": 5
   },
   "net_inspector_panel": {
