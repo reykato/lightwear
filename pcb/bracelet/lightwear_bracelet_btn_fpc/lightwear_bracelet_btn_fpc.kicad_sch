@@ -581,7 +581,7 @@
 				)
 			)
 		)
-		(property "Footprint" "footprints:1TS016A-1800-0600-CT"
+		(property "Footprint" "footprints:GT-TC155X-HXXXX-LX"
 			(at 104.14 87.63 0)
 			(effects
 				(font
