@@ -5,6 +5,7 @@
 
 // Forward declarations
 static void wakeISR(void);
+static void chargeISR(void);
 
 // Pin port bits (ATtiny1616 port naming)
 #define PIN_nCHRG PIN_PC2
@@ -16,14 +17,12 @@ static void wakeISR(void);
 #define DAC_HIGH  196
 
 // Breathing mode ramps between these DAC codes
-#define BREATHE_LOW   136
+#define BREATHE_LOW   130
 #define BREATHE_HIGH  196
 
 enum Mode { MODE_OFF = 0, MODE_LOW, MODE_HIGH, MODE_BREATHE };
 #define MODE_COUNT 4
 
-// Raw DAC code for each static mode. MODE_BREATHE is driven dynamically,
-// so its table entry is unused (kept only to keep the array in bounds).
 static const uint8_t modeDacValues[] = {
     0,        // MODE_OFF
     DAC_LOW,  // MODE_LOW
@@ -33,6 +32,11 @@ static const uint8_t modeDacValues[] = {
 
 volatile Mode globalMode = MODE_OFF;
 
+// Mode the user selected via the button. While charging we override the display
+// with the breathing effect and restore this once charging stops/completes.
+static Mode userMode = MODE_OFF;
+static bool breathingDueToCharge = false;
+
 // Flag set by button ISR to request wake handling in main loop
 volatile bool wakeRequested = false;
 
@@ -40,11 +44,20 @@ volatile bool wakeRequested = false;
 volatile bool breatheTick = false;
 
 static constexpr unsigned long debounceDelayMillis = 50;
-static constexpr long longPressMillis = 2000;
+static constexpr long longPressMillis = 1500;
+
+// nCHRG is an active-low, open-drain charge-status pin: LOW while charging,
+// released HIGH when charging completes or the charger is unplugged.
+// If your charger's STAT pin is active-high instead, flip this comparison.
+static inline bool isCharging(void) {
+  return digitalRead(PIN_nCHRG) == LOW;
+}
 
 static void configurePins(void) {
   pinMode(PIN_nCHRG, INPUT_PULLUP);
   pinMode(PIN_BTN, INPUT_PULLUP);
+  // pinMode(PIN_LED, OUTPUT);
+  // digitalWrite(PIN_LED, HIGH);
 }
 
 static void configureVREF(void) {
@@ -131,10 +144,7 @@ static float measureVdd(void) {
 
 // --- RTC Periodic Interrupt Timer (breathing tick) --------------------------
 // Runs off the internal 32.768 kHz ULP oscillator, which keeps running in
-// standby sleep. CYC512 / 32768 Hz = 15.625 ms per tick.
-// NOTE: if you selected "RTC" as the millis() timer source in the Tools menu,
-// it will collide with this. megaTinyCore's default millis source is a TCB,
-// which leaves the PIT free — keep it that way.
+// standby sleep
 static void pitInit(void) {
   while (RTC.STATUS > 0) {}             // wait for any pending register syncs
   RTC.CLKSEL = RTC_CLKSEL_INT32K_gc;    // 32.768 kHz internal ULP
@@ -199,6 +209,24 @@ static inline void applyMode(Mode m) {
   }
 }
 
+// Reconcile the display with the charge state. Called on every wake.
+// While charging, the breathing effect overrides whatever the user selected;
+// when charging stops or completes, the previous mode is restored.
+static void syncChargeMode(void) {
+  if (isCharging()) {
+    if (!breathingDueToCharge) {
+      userMode = globalMode;      // remember what to return to
+      breathingDueToCharge = true;
+      applyMode(MODE_BREATHE);
+    }
+  } else {
+    if (breathingDueToCharge) {
+      breathingDueToCharge = false;
+      applyMode(userMode);        // restore the user's mode
+    }
+  }
+}
+
 static void blinkStrip(Mode mode, int times, unsigned int delayMillis) {
   for (int i = 0; i < times; i++) {
     applyMode(mode);
@@ -213,7 +241,7 @@ static void showBatteryLevel(void) {
   applyMode(MODE_OFF);
   delay(500);
   float batteryV = measureVdd();
-  if (batteryV <= 3.55) { // 0% - 25%
+  if (batteryV <= 3.45) { // 0% - 25%
     blinkStrip(MODE_HIGH, 1, 400);
   } else if (batteryV <= 3.7) { // 25% - 50%
     blinkStrip(MODE_HIGH, 2, 300);
@@ -226,7 +254,7 @@ static void showBatteryLevel(void) {
   applyMode(beforeMode);
 }
 
-// Disable input buffers on all pins (except PA5) to minimise sleep current.
+// Disable input buffers on all pins (except PA5 and PC2) to minimise sleep current.
 static void disableInputBuffers(void) {
   PORTA.PIN0CTRL = PORT_ISC_INPUT_DISABLE_gc; // unused
   PORTA.PIN1CTRL = PORT_ISC_INPUT_DISABLE_gc; // unused
@@ -246,34 +274,18 @@ static void disableInputBuffers(void) {
 
   PORTC.PIN0CTRL = PORT_ISC_INPUT_DISABLE_gc; // unused
   PORTC.PIN1CTRL = PORT_ISC_INPUT_DISABLE_gc; // PC1 = LED, set to INPUT before sleep
-  PORTC.PIN2CTRL = PORT_ISC_INPUT_DISABLE_gc; // PC2 = nCHRG, pull-up disabled, buffer disabled
+  // PC2 = nCHRG: keep pull-up + edge sensing so plug/unplug wakes from power-down
+  PORTC.PIN2CTRL = PORT_PULLUPEN_bm | PORT_ISC_BOTHEDGES_gc;
   PORTC.PIN3CTRL = PORT_ISC_INPUT_DISABLE_gc; // unused
 }
 
 static void restoreInputBuffers(void) {
-  // Reset all PINnCTRL registers to power-on default (input buffer on,
-  // no pull-up, no interrupt). configurePins() and attachInterrupt()
-  // called in restorePeripherals() will then set the correct modes.
-  // PORTA.PIN0CTRL = 0;
-  // PORTA.PIN1CTRL = 0;
-  // PORTA.PIN2CTRL = 0;
-  // PORTA.PIN3CTRL = 0;
-  // PORTA.PIN4CTRL = 0;
-  PORTA.PIN5CTRL = 0; // attachInterrupt() will reconfigure PA5
+  // Reset the PINnCTRL registers we changed back to power-on default (input
+  // buffer on, no pull-up, no interrupt). configurePins() and the
+  // attachInterrupt() calls in restorePeripherals() then set the correct modes.
+  PORTA.PIN5CTRL = 0; // attachInterrupt() will reconfigure PA5 (button)
   PORTA.PIN6CTRL = 0;
-  // PORTA.PIN7CTRL = 0;
-
-  // PORTB.PIN0CTRL = 0;
-  // PORTB.PIN1CTRL = 0;
-  // PORTB.PIN2CTRL = 0;
-  // PORTB.PIN3CTRL = 0;
-  // PORTB.PIN4CTRL = 0;
-  // PORTB.PIN5CTRL = 0;
-
-  // PORTC.PIN0CTRL = 0;
-  // PORTC.PIN1CTRL = 0;
-  // PORTC.PIN2CTRL = 0;
-  // PORTC.PIN3CTRL = 0;
+  PORTC.PIN2CTRL = 0; // configurePins()/attachInterrupt() reconfigure PC2 (nCHRG)
 }
 
 static void startSleep(void) {
@@ -310,14 +322,15 @@ static void restorePeripherals(void) {
   configureVREF();
   configurePins();
   attachInterrupt(digitalPinToInterrupt(PIN_BTN), wakeISR, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(PIN_nCHRG), chargeISR, CHANGE);
   configureDAC();
   applyMode(globalMode);
 }
 
 static void startDeepSleep(void) {
   // Deepest sleep mode on ATtiny1616. The PIT is already stopped here because
-  // applyMode() calls pitDisable() for every non-breathe mode, so nothing will
-  // wake the MCU except the button.
+  // applyMode() calls pitDisable() for every non-breathe mode. The button and
+  // the charge pin (PC2) remain as wake sources.
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   noInterrupts();
 
@@ -338,11 +351,21 @@ static void wakeISR(void) {
   wakeRequested = true;
 }
 
+static void chargeISR(void) {
+  // Nothing to latch here: the interrupt firing is what wakes the MCU, and
+  // loop() re-reads the charge pin via syncChargeMode() once it's awake.
+}
+
 static void handleWake(void) {
   // Clear request early to avoid re-entrancy while handling
   wakeRequested = false;
 
   delay(debounceDelayMillis);
+
+  // While charging, the breathing indicator owns the strip — ignore the button
+  // (also avoids a misleading battery reading, since the charger inflates VDD).
+  if (isCharging()) return;
+
   if (!digitalRead(PIN_BTN)) {
     unsigned long startTime = millis();
     unsigned long endTime = startTime;
@@ -364,6 +387,7 @@ static void handleWake(void) {
 void setup() {
   configurePins();
   attachInterrupt(digitalPinToInterrupt(PIN_BTN), wakeISR, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(PIN_nCHRG), chargeISR, CHANGE);
   configureVREF();
   configureDAC();
   pitInit();
@@ -373,6 +397,9 @@ void setup() {
 }
 
 void loop() {
+  // Reconcile with charge state on every wake (plugged in, unplugged, or full)
+  syncChargeMode();
+
   if (wakeRequested) {
     handleWake();
     return;               // re-check state on next loop() before sleeping
@@ -384,11 +411,11 @@ void loop() {
         breatheTick = false;
         breatheUpdate();
       }
-      startSleep();       // STANDBY: DAC keeps driving, PIT + button both wake
+      startSleep();       // STANDBY: DAC keeps driving, PIT + button + charge wake
       break;
 
     case MODE_OFF:
-      startDeepSleep();   // POWER_DOWN: lowest power, only the button wakes
+      startDeepSleep();   // POWER_DOWN: lowest power, button + charge pin wake
       break;
 
     default:              // MODE_LOW / MODE_HIGH
