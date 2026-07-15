@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <avr/io.h>
 #include <avr/sleep.h>
+#include <avr/interrupt.h>
 
 // Forward declarations
 static void wakeISR(void);
@@ -8,29 +9,35 @@ static void wakeISR(void);
 // Pin port bits (ATtiny1616 port naming)
 #define PIN_nCHRG PIN_PC2
 #define PIN_BTN   PIN_PA5
-#define PIN_LED   PIN_PC1 // (LED cathode, active low)
 #define PIN_GATE  PIN_PA6 // (DAC output)
 
-// Gate voltages - must be <= 2.5V internal reference
-// Adjust these values to the required GATE_V_{mode-name}
-#define GATE_V_LOW  1.00f
-#define GATE_V_HIGH 1.15f
+// Raw 8-bit DAC codes written directly to DAC0.DATA
+#define DAC_LOW   170
+#define DAC_HIGH  196
 
-// DAC resolution used by the ATtiny1616 DAC (8-bit)
-#define DAC_MAX 255u
+// Breathing mode ramps between these DAC codes
+#define BREATHE_LOW   136
+#define BREATHE_HIGH  196
 
-enum Mode { MODE_OFF = 0, MODE_LOW, MODE_HIGH };
+enum Mode { MODE_OFF = 0, MODE_LOW, MODE_HIGH, MODE_BREATHE };
+#define MODE_COUNT 4
 
-static const float modeVoltages[] = {
-    0.0f,
-    GATE_V_LOW,
-    GATE_V_HIGH
+// Raw DAC code for each static mode. MODE_BREATHE is driven dynamically,
+// so its table entry is unused (kept only to keep the array in bounds).
+static const uint8_t modeDacValues[] = {
+    0,        // MODE_OFF
+    DAC_LOW,  // MODE_LOW
+    DAC_HIGH, // MODE_HIGH
+    0         // MODE_BREATHE (unused)
 };
 
 volatile Mode globalMode = MODE_OFF;
 
-// Flag set by ISR to request wake handling in main loop
+// Flag set by button ISR to request wake handling in main loop
 volatile bool wakeRequested = false;
+
+// Flag set by the RTC PIT ISR (~every 15.6 ms) to advance the breathing effect
+volatile bool breatheTick = false;
 
 static constexpr unsigned long debounceDelayMillis = 50;
 static constexpr long longPressMillis = 2000;
@@ -38,13 +45,11 @@ static constexpr long longPressMillis = 2000;
 static void configurePins(void) {
   pinMode(PIN_nCHRG, INPUT_PULLUP);
   pinMode(PIN_BTN, INPUT_PULLUP);
-  // pinMode(PIN_LED, OUTPUT);
-  // digitalWrite(PIN_LED, HIGH);
 }
 
 static void configureVREF(void) {
-  // Set VREF to 1.1v for ADC, 2.5v for DAC
-  VREF.CTRLA = VREF_ADC0REFSEL_1V1_gc | VREF_DAC0REFSEL_2V5_gc;
+  // Set VREF to 1.1v for ADC, 1.5v for DAC
+  VREF.CTRLA = VREF_ADC0REFSEL_1V1_gc | VREF_DAC0REFSEL_1V5_gc;
 }
 
 // Setup DAC if available
@@ -124,28 +129,73 @@ static float measureVdd(void) {
   return vdd;
 }
 
-// Convert desired voltage as float (0..2.5V) to 8-bit number
-static inline uint8_t voltageToDac(float v) {
-  if (v <= 0.0f) return 0;
-  if (v >= 2.5f) return (uint8_t)DAC_MAX;
-  return (uint8_t)((v / 2.5f) * (float)DAC_MAX + 0.5f);
+// --- RTC Periodic Interrupt Timer (breathing tick) --------------------------
+// Runs off the internal 32.768 kHz ULP oscillator, which keeps running in
+// standby sleep. CYC512 / 32768 Hz = 15.625 ms per tick.
+// NOTE: if you selected "RTC" as the millis() timer source in the Tools menu,
+// it will collide with this. megaTinyCore's default millis source is a TCB,
+// which leaves the PIT free — keep it that way.
+static void pitInit(void) {
+  while (RTC.STATUS > 0) {}             // wait for any pending register syncs
+  RTC.CLKSEL = RTC_CLKSEL_INT32K_gc;    // 32.768 kHz internal ULP
+  RTC.PITINTCTRL = RTC_PI_bm;           // enable the periodic interrupt
 }
 
-static inline void dacSetVoltage(float voltage) {
-  DAC0.DATA = voltageToDac(voltage);
+static void pitEnable(void) {
+  while (RTC.PITSTATUS & RTC_CTRLBUSY_bm) {}
+  RTC.PITCTRLA = RTC_PERIOD_CYC512_gc | RTC_PITEN_bm; // ~15.6 ms period
+}
+
+static void pitDisable(void) {
+  while (RTC.PITSTATUS & RTC_CTRLBUSY_bm) {}
+  RTC.PITCTRLA = 0;                     // stop the periodic interrupt
+}
+
+ISR(RTC_PIT_vect) {
+  RTC.PITINTFLAGS = RTC_PI_bm;          // clear the interrupt flag
+  breatheTick = true;
+}
+
+// --- Breathing effect -------------------------------------------------------
+// Ramp the raw DAC code up and down between BREATHE_LOW and BREATHE_HIGH. The
+// PIT wakes the MCU every ~15.6 ms; we only step one DAC code every BREATHE_DIV
+// ticks so the sweep is slow. Each code is simply held for BREATHE_DIV ticks.
+// Full breath ~= (BREATHE_HIGH - BREATHE_LOW) * 2 * BREATHE_DIV * 15.6 ms.
+// Note: a wider BREATHE window = more codes = longer breath at the same
+// BREATHE_DIV, so drop BREATHE_DIV if the sweep feels too slow.
+#define BREATHE_DIV 3
+
+static uint8_t breatheVal       = BREATHE_LOW;
+static int8_t  breatheDir       = +1;
+static uint8_t breatheTickCount = 0;
+
+static void breatheInit(void) {
+  breatheVal = BREATHE_LOW;
+  breatheDir = +1;
+  breatheTickCount = 0;
+}
+
+static void breatheUpdate(void) {
+  if (++breatheTickCount < BREATHE_DIV) return; // not time to step yet
+  breatheTickCount = 0;
+
+  int16_t v = (int16_t)breatheVal + breatheDir;
+  if (v >= BREATHE_HIGH)     { v = BREATHE_HIGH; breatheDir = -1; } // top, reverse
+  else if (v <= BREATHE_LOW) { v = BREATHE_LOW;  breatheDir = +1; } // bottom, reverse
+
+  breatheVal = (uint8_t)v;
+  DAC0.DATA = breatheVal;
 }
 
 static inline void applyMode(Mode m) {
   globalMode = m;
-  dacSetVoltage(modeVoltages[m]);
-}
-
-static void blinkOnboardLED(int times, unsigned int delayMillis) {
-  for (int i = 0; i < times; i++) {
-    digitalWrite(PIN_LED, LOW);
-    delay(delayMillis);
-    digitalWrite(PIN_LED, HIGH);
-    delay(delayMillis);
+  if (m == MODE_BREATHE) {
+    breatheInit();
+    DAC0.DATA = BREATHE_LOW;  // start of the breath
+    pitEnable();              // begin ~15.6 ms periodic wake
+  } else {
+    pitDisable();             // no periodic wake in static / OFF modes
+    DAC0.DATA = modeDacValues[m];
   }
 }
 
@@ -265,7 +315,9 @@ static void restorePeripherals(void) {
 }
 
 static void startDeepSleep(void) {
-  // Deepest sleep mode on ATtiny1616
+  // Deepest sleep mode on ATtiny1616. The PIT is already stopped here because
+  // applyMode() calls pitDisable() for every non-breathe mode, so nothing will
+  // wake the MCU except the button.
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   noInterrupts();
 
@@ -304,8 +356,8 @@ static void handleWake(void) {
       }
     }
 
-    // Short press
-    applyMode((Mode)((globalMode + 1) % 3));
+    // Short press: advance to the next mode (OFF -> LOW -> HIGH -> BREATHE -> OFF)
+    applyMode((Mode)((globalMode + 1) % MODE_COUNT));
   }
 }
 
@@ -314,20 +366,33 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(PIN_BTN), wakeISR, CHANGE);
   configureVREF();
   configureDAC();
+  pitInit();
 
-  // blinkOnboardLED(2, 200);
-  // blinkStrip(MODE_LOW, 2, 200);
+  blinkStrip(MODE_LOW, 2, 200);
   applyMode(globalMode);
 }
 
 void loop() {
-  if (!wakeRequested) {
-      if (globalMode == MODE_OFF)
-        startDeepSleep();
-      else
-        startSleep();
+  if (wakeRequested) {
+    handleWake();
+    return;               // re-check state on next loop() before sleeping
   }
 
-  if (wakeRequested)
-      handleWake();
+  switch (globalMode) {
+    case MODE_BREATHE:
+      if (breatheTick) {
+        breatheTick = false;
+        breatheUpdate();
+      }
+      startSleep();       // STANDBY: DAC keeps driving, PIT + button both wake
+      break;
+
+    case MODE_OFF:
+      startDeepSleep();   // POWER_DOWN: lowest power, only the button wakes
+      break;
+
+    default:              // MODE_LOW / MODE_HIGH
+      startSleep();       // STANDBY: DAC holds the static level
+      break;
+  }
 }
