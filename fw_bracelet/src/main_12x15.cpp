@@ -46,9 +46,7 @@ volatile bool breatheTick = false;
 static constexpr unsigned long debounceDelayMillis = 50;
 static constexpr long longPressMillis = 1500;
 
-// nCHRG is an active-low, open-drain charge-status pin: LOW while charging,
-// released HIGH when charging completes or the charger is unplugged.
-// If your charger's STAT pin is active-high instead, flip this comparison.
+// nCHRG is an active-low, open-drain charge-status pin: LOW while charging
 static inline bool isCharging(void) {
   return digitalRead(PIN_nCHRG) == LOW;
 }
@@ -56,8 +54,6 @@ static inline bool isCharging(void) {
 static void configurePins(void) {
   pinMode(PIN_nCHRG, INPUT_PULLUP);
   pinMode(PIN_BTN, INPUT_PULLUP);
-  // pinMode(PIN_LED, OUTPUT);
-  // digitalWrite(PIN_LED, HIGH);
 }
 
 static void configureVREF(void) {
@@ -87,7 +83,7 @@ static inline void configureADC(void) {
   ADC0.CTRLD = ADC_INITDLY_DLY32_gc; // Initialization delay of 32 CLK_ADC cycles
   ADC0.SAMPCTRL = 20; // Extended sample length for internal bandgap (in CLK_ADC cycles)
 
-  // Finally, enable ADC
+  // Enable ADC
   ADC0.CTRLA |= ADC_ENABLE_bm;
 }
 
@@ -106,7 +102,7 @@ static inline uint16_t readBandgapADC(void) {
   // Wait for conversion complete
   while (!(ADC0.INTFLAGS & ADC_RESRDY_bm)) {}
 
-  // Read result first (reading can clear ready flag on some implementations)
+  // Read result
   uint16_t res = ADC0.RES;
 
   // Ensure flag cleared
@@ -122,13 +118,13 @@ static float measureVdd(void) {
   // Configure ADC peripheral
   configureADC();
 
-  // Single conversion returns accumulated sum when ACC32 is used.
-  // Divide by accumulation count to get average per-sample reading.
+  // Single conversion returns accumulated sum (32 samples)
+  // Divide by 32 to get average reading
   const float ACCUM_COUNT = 32.0f;
 
   uint16_t res_sum = readBandgapADC();
 
-  // Disable ADC after reading
+  // Disable ADC to save power
   ADC0.CTRLA &= ~ADC_ENABLE_bm;
 
   float avg_reading = (float)res_sum / ACCUM_COUNT;
@@ -280,9 +276,6 @@ static void disableInputBuffers(void) {
 }
 
 static void restoreInputBuffers(void) {
-  // Reset the PINnCTRL registers we changed back to power-on default (input
-  // buffer on, no pull-up, no interrupt). configurePins() and the
-  // attachInterrupt() calls in restorePeripherals() then set the correct modes.
   PORTA.PIN5CTRL = 0; // attachInterrupt() will reconfigure PA5 (button)
   PORTA.PIN6CTRL = 0;
   PORTC.PIN2CTRL = 0; // configurePins()/attachInterrupt() reconfigure PC2 (nCHRG)
@@ -301,15 +294,11 @@ static void startSleep(void) {
 }
 
 static void shutdownPeripherals(void) {
-  // Ensure DAC output is zero, then disable the DAC
+  // Ensure DAC output is zero, then disable  DAC
   DAC0.DATA = 0;
   DAC0.CTRLA &= ~DAC_ENABLE_bm;
 
-  // Turn off onboard LED (active low) and set pin high-impedance
-  // digitalWrite(PIN_LED, HIGH);
-  // pinMode(PIN_LED, INPUT);
-
-  // Disable ADC to save power
+  // Disable ADC
   ADC0.CTRLA &= ~ADC_ENABLE_bm;
 
   // Disable voltage references
